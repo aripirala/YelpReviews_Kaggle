@@ -1,5 +1,5 @@
 # YelpReviews_Kaggle
-![Yelp Reviews]
+![Yelp Reviews](yelp.jpeg)
 
 ## Project Description
 In this we attempt to build a simple sentiment classifier with 2 classes *positive* and *negative*. Most of the code is based on the book by **Delip Rao and Brian McMahan - Natural Language Processing**
