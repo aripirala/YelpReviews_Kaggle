@@ -5,6 +5,9 @@ import string
 import os
 import torch
 from torch.utils.data import DataLoader
+import json
+import re
+
 
 
 class Vocabulary(object):
@@ -198,6 +201,31 @@ class ReviewVectorizer(object):
 
         return cls(review_vocab, rating_vocab)
 
+    @staticmethod
+    def load_vectorizer_only(vectorizer_pth):
+        """
+
+        :param vectorizer_pth (str): location of the serialized vectorizer
+        :return:
+        """
+        with open(vectorizer_pth, 'r') as fp:
+            return json.load(fp)
+
+    @classmethod
+    def from_serializable_and_json(cls, vectorizer_pth):
+        """Instantiate a ReviewVectorizer from a serializable dictionary
+
+        Args:
+            contents (dict): the serializable dictionary
+        Returns:
+            an instance of the ReviewVectorizer class
+        """
+        vectorizer_dict = cls.load_vectorizer_only(vectorizer_pth)
+        review_vocab = Vocabulary.from_serializable(vectorizer_dict['review_vocab'])
+        rating_vocab = Vocabulary.from_serializable(vectorizer_dict['rating_vocab'])
+
+        return cls(review_vocab, rating_vocab)
+
 def generate_batches(dataset, batch_size, shuffle=True,
                      drop_last=True, device="cpu"):
     """
@@ -284,3 +312,9 @@ def set_seed_everywhere(seed, cuda):
 def handle_dirs(dirpath):
     if not os.path.exists(dirpath):
         os.makedirs(dirpath)
+
+def preprocess_text(text):
+    text = text.lower()
+    text = re.sub(r"([.,!?])", r" \1 ", text)
+    text = re.sub(r"[^a-zA-Z.,!?]+", r" ", text)
+    return text
