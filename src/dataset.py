@@ -134,7 +134,7 @@ class ReviewDataset:
         return len(self) // batch_size
 
 if __name__ == '__main__':
-    file_path = configs.TRAINING_FILE
+    file_path = '../input/reviews_with_splits_lite.csv'
     print(f'file path is {file_path}')
     review_dataset = ReviewDataset.load_dataset_and_make_vectorizer(file_path)
     train_dataset = review_dataset
