@@ -1,5 +1,7 @@
 # import transformers
 # import tokenizers
+# pylint: disable=no-member
+
 import os
 from argparse import Namespace
 from model import ReviewMLPClassifier, ReviewPerceptronClassifier
