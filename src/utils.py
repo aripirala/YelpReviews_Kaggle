@@ -7,9 +7,6 @@ import torch
 from torch.utils.data import DataLoader
 import json
 import re
-
-
-
 class Vocabulary(object):
     """docstring for Vocabulary."""
     def __init__(self, token_to_idx=None, add_unk=True, unk_token='<UNK>'):
@@ -114,7 +111,6 @@ class Vocabulary(object):
 
     def __len__(self):
         return len(self._token_to_idx)
-
 class ReviewVectorizer(object):
     """docstring review_ ReviewVectorizer."""
     def __init__(self, review_vocab, rating_vocab):

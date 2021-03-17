@@ -6,7 +6,7 @@ from torch.utils.data import dataset
 import pandas as pd
 import numpy as np
 import json
-import configs
+# import configs
 
 
 class ReviewDataset:
