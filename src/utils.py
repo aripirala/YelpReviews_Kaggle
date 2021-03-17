@@ -274,7 +274,7 @@ def update_train_state(args, model, train_state):
 
     # Save model if performance improved
     elif train_state['epoch_index'] >= 1:
-        loss_tm1, loss_t = train_state['val_loss'][-2:]
+        _ , loss_t = train_state['val_loss'][-2:]
 
         # If loss worsened
         if loss_t >= train_state['early_stopping_best_val']:
