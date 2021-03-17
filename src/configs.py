@@ -11,10 +11,10 @@ from utils import handle_dirs
 args = Namespace(
     # Data and Path information
     frequency_cutoff=25,
-    model_state_file='model.pth',
+    model_state_file='model_2.pth',
     review_csv='../input/reviews_with_splits_lite.csv',
     # review_csv='data/yelp/reviews_with_splits_full.csv',
-    save_dir='../experiment/mlp/',
+    save_dir='../experiment/perceptron/',
     vectorizer_file='vectorizer.json',
     classifier=None,
     vectorizer = None,
@@ -50,8 +50,8 @@ else:
 
 vectorizer = dataset.get_vectorizer()
 
-# classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
-classifier = ReviewMLPClassifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100])
+classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
+# classifier = ReviewMLPClassifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100])
 
 
 args.classifier = classifier
