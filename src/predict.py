@@ -1,3 +1,7 @@
+# pylint: disable=no-member
+# pylint: disable=E1101
+# pylint: disable=E1102
+
 import torch
 from utils import preprocess_text
 

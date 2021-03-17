@@ -33,7 +33,7 @@ args = Namespace(
     cuda=True,
     expand_filepaths_to_save_dir=True,
     reload_from_files=False,
-    train=True,
+    train=False,
 )
 # handle dirs
 handle_dirs(args.save_dir)

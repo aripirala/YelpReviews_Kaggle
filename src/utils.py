@@ -1,3 +1,5 @@
+# pylint: disable=no-member
+
 import pandas as pd 
 import numpy as np
 from collections import Counter
@@ -233,7 +235,7 @@ def generate_batches(dataset, batch_size, shuffle=True,
 
     for data_dict in dataloader:
         out_data_dict = {}
-        for name, tensor in data_dict.items():
+        for name in data_dict.keys():
             out_data_dict[name] = data_dict[name].to(device)
         yield out_data_dict
 
