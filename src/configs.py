@@ -8,8 +8,6 @@ from model import ReviewMLPClassifier, ReviewPerceptronClassifier
 from dataset import ReviewDataset
 from utils import handle_dirs
 
-
-
 args = Namespace(
     # Data and Path information
     frequency_cutoff=25,
