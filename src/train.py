@@ -69,20 +69,6 @@ if __name__ == '__main__':
 
     train_state = make_train_state(args)
 
-    # epoch_bar = tqdm(desc='training routine',
-    #                           total=args.num_epochs,
-    #                           position=0)
-    #
-    # dataset.set_split('train')
-    # train_bar = tqdm(desc='split=train',
-    #                           total=dataset.get_num_batches(args.batch_size),
-    #                           position=1,
-    #                           leave=True)
-    # dataset.set_split('val')
-    # val_bar = tqdm(desc='split=val',
-    #                         total=dataset.get_num_batches(args.batch_size),
-    #                         position=1,
-    #                         leave=True)
 
     epoch_bar = tqdm(desc='training routine',
                      total=args.num_epochs,
