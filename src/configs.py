@@ -32,6 +32,8 @@ args = Namespace(
     expand_filepaths_to_save_dir=True,
     reload_from_files=False,
     train=False,
+    max_len = 25,
+    vector_type='embedding'
 )
 # handle dirs
 handle_dirs(args.save_dir)
@@ -45,7 +47,9 @@ if args.reload_from_files:
 else:
         print("Loading dataset and creating vectorizer")
         # create dataset and vectorizer
-        dataset = ReviewDataset.load_dataset_and_make_vectorizer(args.review_csv)
+        dataset = ReviewDataset.load_dataset_and_make_vectorizer(args.review_csv, 
+                                                                args.vector_type, 
+                                                                args.max_len)
         dataset.save_vectorizer(vectorizer_pth)
 
 vectorizer = dataset.get_vectorizer()
@@ -59,6 +63,27 @@ args.vectorizer = vectorizer
 args.dataset = dataset
 
 if __name__== '__main__':
-    print(args)
+    # print(args)
+    review_dataset = args.dataset
+    # print(args.dataset._lookup_dict)
+    train_dataset = review_dataset 
+    print(f'Training dataset has {len(train_dataset)}')
+    print('First five items are --')
+    for i in range(5):
+        x, y = train_dataset[i]['x_data'], train_dataset[i]['y_target']
+        print(f'data {i+1}...\n\t{x}\n\t{y}')
+
+    review_dataset.set_split('val')
+    print(f'Validation dataset has {len(review_dataset)}')
+    print('Two items are --')
+    for i in range(2):
+        x, y = review_dataset[i]['x_data'], review_dataset[i]['y_target']
+        print(f'data {i+1}...\n\t{x}\n\t{y}')
+
+    review_dataset.set_split('train')
+    print(f'Training dataset has {len(review_dataset)}')
+
+    review_dataset.set_split('test')
+    print(f'Test dataset has {len(review_dataset)}')
 
     

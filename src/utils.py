@@ -9,9 +9,12 @@ import torch
 from torch.utils.data import DataLoader
 import json
 import re
+# from configs import args
+
+
 class Vocabulary(object):
     """docstring for Vocabulary."""
-    def __init__(self, token_to_idx=None, add_unk=True, unk_token='<UNK>'):
+    def __init__(self, token_to_idx=None, add_unk=True, unk_token='<UNK>', add_pad=False, pad_token='<PAD>'):
         if token_to_idx is None:
             token_to_idx = {}
         self._token_to_idx = token_to_idx
@@ -22,7 +25,16 @@ class Vocabulary(object):
         self._unk_token = unk_token
         self._add_unk = add_unk
         
+        self._pad_token = pad_token
+        self._add_pad = add_pad
+
         self.unk_index = -1
+
+        if add_pad:
+            self.add_token(pad_token)
+            self._pad_index = self.lookup_token(pad_token)
+            print(f'{pad_token} - index is {self._pad_index}')
+
         if add_unk:
             self.unk_index = self.add_token(unk_token)
 
@@ -48,7 +60,9 @@ class Vocabulary(object):
         return {
             'token_to_idx': self._token_to_idx,
             'add_unk': self._add_unk,
-            'unk_token': self._unk_token
+            'unk_token': self._unk_token,
+            'add_pad': self._add_pad,
+            'pad_token': self._pad_token,
         }
     
     @classmethod
@@ -113,9 +127,11 @@ class Vocabulary(object):
 
     def __len__(self):
         return len(self._token_to_idx)
+
+
 class ReviewVectorizer(object):
     """docstring review_ ReviewVectorizer."""
-    def __init__(self, review_vocab, rating_vocab):
+    def __init__(self, review_vocab, rating_vocab, vector_type='one_hot', max_len=None):
         """
 
         Args:
@@ -124,6 +140,8 @@ class ReviewVectorizer(object):
         """
         self.review_vocab = review_vocab
         self.rating_vocab = rating_vocab
+        self.max_len = max_len
+        self.vector_type = vector_type
     
     def vectorize(self, review):
         """Create a collapsed one-hot code vector fo the review
@@ -134,16 +152,47 @@ class ReviewVectorizer(object):
             one_hot (np.ndarray): collapsed one-hot encoding
         """
 
+        if self.vector_type == 'one_hot':
+            return self.vectorize_onehot(review)
+        
+        return self.vectorize_embedding(review)
+        
+    def vectorize_embedding(self, review):
+        """Create a collapsed one-hot code vector fo the review
+
+        Args:
+            review (str): the review in the str format
+        Returns:
+            token_ids (np.array): np array of indices of the tokens in the vocab
+        """
+        token_ids = np.zeros(self.max_len, dtype=np.float32)
+        token_ids.fill(self.review_vocab._pad_index)
+
+        for id, token in enumerate(review.split(" ")):
+            if id >= self.max_len:
+                break
+            index = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
+            token_ids[id] = index
+        return token_ids
+    
+    def vectorize_onehot(self, review):
+        """Create a collapsed one-hot code vector fo the review
+
+        Args:
+            review (str): the review in the str format
+        Returns:
+            one_hot (np.ndarray): collapsed one-hot encoding
+        """
         one_hot = np.zeros(len(self.review_vocab), dtype=np.float32)
 
         for token in review.split(" "):
-            idx = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
-            one_hot[idx] = 1
-
+            index = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
+            one_hot[index] = 1
         return one_hot
+    
 
     @classmethod
-    def from_dataframe(cls, review_df, cutoff=25):
+    def from_dataframe(cls, review_df, cutoff=25, vector_type='one_hot', max_len=None):
         """
         Instantiate the vectorizer from the review pandas dataframe
 
@@ -152,7 +201,11 @@ class ReviewVectorizer(object):
         :return:
         """
 
-        review_vocab = Vocabulary(add_unk=True)
+        add_pad = True if vector_type is 'embedding' else False
+        print(f'add_pad is {add_pad}')    
+
+
+        review_vocab = Vocabulary(add_unk=True, add_pad=add_pad)
         rating_vocab = Vocabulary(add_unk=False)
 
         # Add ratings
@@ -170,7 +223,7 @@ class ReviewVectorizer(object):
             if count >= cutoff:
                 review_vocab.add_token(word)
 
-        return cls(review_vocab, rating_vocab)
+        return cls(review_vocab, rating_vocab, vector_type, max_len)
 
     def to_serializable(self):
         """
@@ -181,7 +234,9 @@ class ReviewVectorizer(object):
 
         return {
             'review_vocab': self.review_vocab.to_serializable(),
-            'rating_vocab': self.rating_vocab.to_serializable()
+            'rating_vocab': self.rating_vocab.to_serializable(),
+            'vector_type':self.vector_type,
+            'max_len': self.max_len,
         }
 
     @classmethod
@@ -196,8 +251,10 @@ class ReviewVectorizer(object):
 
         review_vocab = Vocabulary.from_serializable(contents['review_vocab'])
         rating_vocab = Vocabulary.from_serializable(contents['rating_vocab'])
+        vector_type = contents['vector_type']
+        max_len = contents['max_len']
 
-        return cls(review_vocab, rating_vocab)
+        return cls(review_vocab, rating_vocab, vector_type, max_len)
 
     @staticmethod
     def load_vectorizer_only(vectorizer_pth):
@@ -221,8 +278,10 @@ class ReviewVectorizer(object):
         vectorizer_dict = cls.load_vectorizer_only(vectorizer_pth)
         review_vocab = Vocabulary.from_serializable(vectorizer_dict['review_vocab'])
         rating_vocab = Vocabulary.from_serializable(vectorizer_dict['rating_vocab'])
+        vector_type = vectorizer_dict['vector_type']
+        max_len = vectorizer_dict['max_len']
 
-        return cls(review_vocab, rating_vocab)
+        return cls(review_vocab, rating_vocab, vector_type, max_len)
 
 def generate_batches(dataset, batch_size, shuffle=True,
                      drop_last=True, device="cpu"):

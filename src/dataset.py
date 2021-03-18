@@ -37,7 +37,7 @@ class ReviewDataset:
         self.set_split('train')
 
     @classmethod
-    def load_dataset_and_make_vectorizer(cls, review_csv):
+    def load_dataset_and_make_vectorizer(cls, review_csv, vector_type='one_hot', max_len=None):
         """Load dataset and make a new vectorizer from scratch
 
         :param review_csv (str): location of dataset
@@ -46,7 +46,7 @@ class ReviewDataset:
         """
         review_df = pd.read_csv(review_csv)
         train_review_df = review_df[review_df.split=='train']
-        vectorizer = ReviewVectorizer.from_dataframe(train_review_df)
+        vectorizer = ReviewVectorizer.from_dataframe(train_review_df, vector_type=vector_type, max_len=max_len)
         print(f'Vectorizer created')
         return cls(review_df, vectorizer)
 
