@@ -113,6 +113,7 @@ if __name__ == '__main__':
                     optimizer.zero_grad()
 
                     # step 2. compute the output
+                    # print(f'Classifier is \n {classifier}')
                     y_pred = classifier(x_in=batch_dict['x_data'].float())
                     y_true = batch_dict['y_target']
 

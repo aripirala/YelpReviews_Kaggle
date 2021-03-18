@@ -165,7 +165,7 @@ class ReviewVectorizer(object):
         Returns:
             token_ids (np.array): np array of indices of the tokens in the vocab
         """
-        token_ids = np.zeros(self.max_len, dtype=np.float32)
+        token_ids = np.zeros(self.max_len, dtype=np.int64)
         token_ids.fill(self.review_vocab._pad_index)
 
         for id, token in enumerate(review.split(" ")):

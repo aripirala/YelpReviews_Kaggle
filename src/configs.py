@@ -4,17 +4,17 @@
 
 import os
 from argparse import Namespace
-from model import ReviewMLPClassifier, ReviewPerceptronClassifier
+from model import ReviewMLPClassifier, ReviewPerceptronClassifier, ReviewMLP_Embed_Classifier
 from dataset import ReviewDataset
 from utils import handle_dirs
 
 args = Namespace(
     # Data and Path information
     frequency_cutoff=25,
-    model_state_file='model_2.pth',
+    model_state_file='model_embed.pth',
     review_csv='../input/reviews_with_splits_lite.csv',
     # review_csv='data/yelp/reviews_with_splits_full.csv',
-    save_dir='../experiment/perceptron/',
+    save_dir='../experiment/embedding/',
     vectorizer_file='vectorizer.json',
     classifier=None,
     vectorizer = None,
@@ -31,7 +31,8 @@ args = Namespace(
     cuda=True,
     expand_filepaths_to_save_dir=True,
     reload_from_files=False,
-    train=False,
+    train=True, # Flag to train your network
+    # If embedding layer is used
     max_len = 25,
     vector_type='embedding'
 )
@@ -54,8 +55,9 @@ else:
 
 vectorizer = dataset.get_vectorizer()
 
-classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
+# classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
 # classifier = ReviewMLPClassifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100])
+classifier = ReviewMLP_Embed_Classifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[50])
 
 
 args.classifier = classifier
