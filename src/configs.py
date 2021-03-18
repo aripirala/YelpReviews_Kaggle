@@ -34,7 +34,9 @@ args = Namespace(
     train=True, # Flag to train your network
     # If embedding layer is used
     max_len = 25,
-    vector_type='embedding'
+    vector_type='embedding',
+    embedding_type = 'pre-trained',
+    embedding_file_name= '../input/glove.6B.50d.txt'
 )
 # handle dirs
 handle_dirs(args.save_dir)
@@ -55,9 +57,13 @@ else:
 
 vectorizer = dataset.get_vectorizer()
 
+
 # classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
 # classifier = ReviewMLPClassifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100])
-classifier = ReviewMLP_Embed_Classifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[50])
+classifier = ReviewMLP_Embed_Classifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100, 50],
+                embedding_file_name=args.embedding_file_name, embedding_dim=50,  
+                word_to_index=vectorizer.review_vocab._token_to_idx, max_idx=len(vectorizer.review_vocab),
+                freeze=False)
 
 
 args.classifier = classifier
