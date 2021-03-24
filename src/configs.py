@@ -6,12 +6,13 @@ import os
 from argparse import Namespace
 from model import ReviewMLPClassifier, ReviewPerceptronClassifier, ReviewMLP_Embed_Classifier
 from dataset import ReviewDataset
+from torch.nn.modules.dropout import Dropout
 from utils import handle_dirs
 
 args = Namespace(
     # Data and Path information
     frequency_cutoff=25,
-    model_state_file='model_embed.pth',
+    model_state_file='model_embed_mlp_test.pth',
     review_csv='../input/reviews_with_splits_lite.csv',
     # review_csv='data/yelp/reviews_with_splits_full.csv',
     save_dir='../experiment/embedding/',
@@ -24,7 +25,7 @@ args = Namespace(
     batch_size=32,
     early_stopping_criteria=5,
     learning_rate=0.001,
-    num_epochs=10,
+    num_epochs=1,
     seed=1337,
     # Runtime options
     catch_keyboard_interrupt=True,
@@ -64,6 +65,10 @@ classifier = ReviewMLP_Embed_Classifier(num_features=len(vectorizer.review_vocab
                 embedding_file_name=args.embedding_file_name, embedding_dim=50,  
                 word_to_index=vectorizer.review_vocab._token_to_idx, max_idx=len(vectorizer.review_vocab),
                 freeze=False)
+# classifier = ReviewCNN_Embed_Classifier2(num_features=len(vectorizer.review_vocab), num_classes=1, channel_list=[100, 200],
+#                 embedding_file_name=args.embedding_file_name, embedding_dim=50,  
+#                 word_to_index=vectorizer.review_vocab._token_to_idx, max_idx=len(vectorizer.review_vocab),
+#                 freeze=False, batch_norm=True, dropout=True, max_pool=True)
 
 
 args.classifier = classifier
