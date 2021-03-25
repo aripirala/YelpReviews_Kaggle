@@ -201,9 +201,6 @@ class ReviewRNN_Embed_Classifier(Embedding, nn.Module):
                     embedding_type=embedding_type, embedding_file_name=embedding_file_name, 
                     word_to_index=word_to_index, max_idx=max_idx, freeze=freeze, **kwargs)
         
-        layers = []
-        
-
         self.rnn = nn.GRU(input_size=embedding_dim,
                              hidden_size=rnn_hidden_size,
                              batch_first=batch_first)
