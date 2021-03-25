@@ -14,7 +14,8 @@ import re
 
 class Vocabulary(object):
     """docstring for Vocabulary."""
-    def __init__(self, token_to_idx=None, add_unk=True, unk_token='<UNK>', add_pad=False, pad_token='<PAD>'):
+    
+    def __init__(self, token_to_idx=None):
         if token_to_idx is None:
             token_to_idx = {}
         self._token_to_idx = token_to_idx
@@ -22,22 +23,7 @@ class Vocabulary(object):
         
         self._idx_to_token = {idx:token for token, idx in self._token_to_idx.items()}
 
-        self._unk_token = unk_token
-        self._add_unk = add_unk
         
-        self._pad_token = pad_token
-        self._add_pad = add_pad
-
-        self.unk_index = -1
-
-        if add_pad:
-            self.add_token(pad_token)
-            self._pad_index = self.lookup_token(pad_token)
-            print(f'{pad_token} - index is {self._pad_index}')
-
-        if add_unk:
-            self.unk_index = self.add_token(unk_token)
-
     def add_token(self, token):
         """Update mapping dicuts based on the token
 
@@ -59,10 +45,6 @@ class Vocabulary(object):
         """
         return {
             'token_to_idx': self._token_to_idx,
-            'add_unk': self._add_unk,
-            'unk_token': self._unk_token,
-            'add_pad': self._add_pad,
-            'pad_token': self._pad_token,
         }
     
     @classmethod
@@ -94,18 +76,10 @@ class Vocabulary(object):
             token (str): the token to look up 
         Returns:
             index (int): the index corresponding to the token
-        Notes:
-            `unk_index` needs to be >=0 (having been added into the Vocabulary) 
-              for the UNK functionality 
+        
         """
-        if token in self._token_to_idx:
-            index = self._token_to_idx[token]
-        else:
-            if self.unk_index >= 0:
-                index = self.unk_index
-            else:
-                index = -99
-                print(f'{token} not present in the vocab and we dont have unk token as well')
+       
+        index = self._token_to_idx[token]
         return index 
 
     def lookup_index(self, index):
@@ -128,6 +102,48 @@ class Vocabulary(object):
     def __len__(self):
         return len(self._token_to_idx)
 
+class SequenceVocabulary(Vocabulary):
+    def __init__(self, token_to_idx=None, unk_token="<UNK>",
+                 mask_token="<MASK>", begin_seq_token="<BEGIN>",
+                 end_seq_token="<END>"):
+        super(SequenceVocabulary, self).__init__(token_to_idx)
+
+        self._mask_token = mask_token
+        self._unk_token = unk_token
+        self._begin_seq_token = begin_seq_token
+        self._end_seq_token = end_seq_token
+
+        self.unk_index = -1
+
+        self.mask_index = self.add_token(self._mask_token)
+        self.unk_index = self.add_token(self._unk_token)
+        self.begin_seq_index = self.add_token(self._begin_seq_token)
+        self.end_seq_index = self.add_token(self._end_seq_token)
+
+    def to_serializable(self):
+        contents = super(SequenceVocabulary, self).to_serializable()
+        contents.update({'unk_token': self._unk_token,
+                         'mask_token': self._mask_token,
+                         'begin_seq_token': self._begin_seq_token,
+                         'end_seq_token': self._end_seq_token})
+        return contents
+    
+    def lookup_token(self, token):
+        """Retrieve the index associated with the token 
+          or the UNK index if token isn't present.
+        
+        Args:
+            token (str): the token to look up 
+        Returns:
+            index (int): the index corresponding to the token
+        Notes:
+            `unk_index` needs to be >=0 (having been added into the Vocabulary) 
+              for the UNK functionality 
+        """
+        if self.unk_index >= 0:
+            return self._token_to_idx.get(token, self.unk_index)
+        else:
+            return self._token_to_idx[token]
 
 class ReviewVectorizer(object):
     """docstring review_ ReviewVectorizer."""
@@ -166,16 +182,22 @@ class ReviewVectorizer(object):
             token_ids (np.array): np array of indices of the tokens in the vocab
         """
         token_ids = np.zeros(self.max_len, dtype=np.int64)
-        token_ids.fill(self.review_vocab._pad_index)
+        token_ids.fill(self.review_vocab.mask_index)
+
+        token_ids[0]= self.review_vocab.begin_seq_index # add index for begin seq
 
         for id, token in enumerate(review.split(" ")):
-            if id >= self.max_len:
+            if id+1 >= self.max_len-1:
                 break
             index = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
-            token_ids[id] = index
-        return token_ids
+            token_ids[id+1] = index
+        token_ids[id+1] = self.review_vocab.end_seq_index
+        len_vector = id+2 # length of review vector including begin and end tokens
+        return token_ids, len_vector
     
     def vectorize_onehot(self, review):
+        #TODO: need to refactor to handle new SequenceVocabulary Class
+
         """Create a collapsed one-hot code vector fo the review
 
         Args:
@@ -201,12 +223,8 @@ class ReviewVectorizer(object):
         :return:
         """
 
-        add_pad = True if vector_type is 'embedding' else False
-        print(f'add_pad is {add_pad}')    
-
-
-        review_vocab = Vocabulary(add_unk=True, add_pad=add_pad)
-        rating_vocab = Vocabulary(add_unk=False)
+        review_vocab = SequenceVocabulary()
+        rating_vocab = Vocabulary()
 
         # Add ratings
         for rating in sorted(set(review_df.rating)):
@@ -214,14 +232,24 @@ class ReviewVectorizer(object):
 
         # Add words that meet the cutoff to the review vocab
         word_counter = Counter()
+        if max_len is None:
+            max_review_len = 0
         for review in review_df.review:
-            for word in review.split(" "):
+            review_list = review.split(" ")
+            review_len = len(review_list)
+            if max_len is None:
+                if max_review_len < review_len:
+                    max_review_len = review_len
+            for word in review_list:
                 if word not in string.punctuation:
                     word_counter[word] += 1
-
+        if max_len is None:
+            max_len = max_review_len + 2
+             # adjust the max len to add both begin and end seq tokens to the review
         for word, count in word_counter.items():
             if count >= cutoff:
                 review_vocab.add_token(word)
+
 
         return cls(review_vocab, rating_vocab, vector_type, max_len)
 
@@ -249,7 +277,7 @@ class ReviewVectorizer(object):
             an instance of the ReviewVectorizer class
         """
 
-        review_vocab = Vocabulary.from_serializable(contents['review_vocab'])
+        review_vocab = SequenceVocabulary.from_serializable(contents['review_vocab'])
         rating_vocab = Vocabulary.from_serializable(contents['rating_vocab'])
         vector_type = contents['vector_type']
         max_len = contents['max_len']
@@ -276,7 +304,7 @@ class ReviewVectorizer(object):
             an instance of the ReviewVectorizer class
         """
         vectorizer_dict = cls.load_vectorizer_only(vectorizer_pth)
-        review_vocab = Vocabulary.from_serializable(vectorizer_dict['review_vocab'])
+        review_vocab = SequenceVocabulary.from_serializable(vectorizer_dict['review_vocab'])
         rating_vocab = Vocabulary.from_serializable(vectorizer_dict['rating_vocab'])
         vector_type = vectorizer_dict['vector_type']
         max_len = vectorizer_dict['max_len']

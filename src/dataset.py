@@ -115,12 +115,13 @@ class ReviewDataset:
 
         # print(f'row is {row}')
 
-        review_vector = self.vectorizer.vectorize(row.review)
+        review_vector, vector_len = self.vectorizer.vectorize(row.review)
         rating_index = self.vectorizer.rating_vocab.lookup_token(row.rating)
 
         return {
             'x_data': review_vector,
-            'y_target': rating_index
+            'y_target': rating_index,
+            'vector_len': vector_len
         }
 
     def get_num_batches(self, batch_size):
@@ -136,13 +137,14 @@ class ReviewDataset:
 if __name__ == '__main__':
     file_path = '../input/reviews_with_splits_lite.csv'
     print(f'file path is {file_path}')
-    review_dataset = ReviewDataset.load_dataset_and_make_vectorizer(file_path)
+    review_dataset = ReviewDataset.load_dataset_and_make_vectorizer(file_path, vector_type='embedding', max_len=100)
     train_dataset = review_dataset
+    print(f'max_len is {train_dataset.vectorizer.max_len}')
     print(f'Training dataset has {len(train_dataset)}')
     print('First five items are --')
     for i in range(5):
-        x, y = train_dataset[i]['x_data'], train_dataset[i]['y_target']
-        print(f'data {i+1}...\n\t{x}\n\t{y}')
+        x, y, review_len = train_dataset[i]['x_data'], train_dataset[i]['y_target'], train_dataset[i]['vector_len'] 
+        print(f'data {i+1}...\n\t{x}\ntarget -\t{y}\nreview_length -\t{review_len}')
 
     review_dataset.set_split('val')
     print(f'Validation dataset has {len(review_dataset)}')

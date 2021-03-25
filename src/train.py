@@ -114,7 +114,10 @@ if __name__ == '__main__':
 
                     # step 2. compute the output
                     # print(f'Classifier is \n {classifier}')
-                    y_pred = classifier(x_in=batch_dict['x_data'].float())
+                    if args.architecture_type == 'RNN':
+                        y_pred = classifier(x_in=batch_dict['x_data'].float(), vector_lengths=batch_dict['vector_len'])
+                    else:
+                        y_pred = classifier(x_in=batch_dict['x_data'].float())
                     y_true = batch_dict['y_target']
 
                     # step 3. compute the loss
@@ -157,8 +160,11 @@ if __name__ == '__main__':
 
                 for batch_index, batch_dict in enumerate(batch_generator):
                     # compute the output
-                    y_pred = classifier(x_in=batch_dict['x_data'].float())
-
+                    if args.architecture_type == 'RNN':
+                        y_pred = classifier(x_in=batch_dict['x_data'].float(), vector_lengths=batch_dict['vector_len'])
+                    else:
+                        y_pred = classifier(x_in=batch_dict['x_data'].float())
+                    
                     # step 3. compute the loss
                     loss = loss_func(y_pred, batch_dict['y_target'].float())
                     loss_t = loss.item()
@@ -210,8 +216,11 @@ if __name__ == '__main__':
 
     for batch_index, batch_dict in enumerate(batch_generator):
         # compute the output
-        y_pred = classifier(x_in=batch_dict['x_data'].float())
-
+        if args.architecture_type == 'RNN':
+            y_pred = classifier(x_in=batch_dict['x_data'].float(), vector_lengths=batch_dict['vector_len'])
+        else:
+            y_pred = classifier(x_in=batch_dict['x_data'].float())
+    
         # compute the loss
         loss = loss_func(y_pred, batch_dict['y_target'].float())
         loss_t = loss.item()

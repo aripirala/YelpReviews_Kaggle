@@ -160,7 +160,7 @@ class ReviewCNN_Embed_Classifier(Embedding, nn.Module):
                 if batch_norm:
                     layers.append(nn.BatchNorm1d(out_channels))
                 if dropout:
-                    layers.append(nn.Dropout(p=0.25))
+                    layers.append(nn.Dropout(p=0.5))
                 
                 in_channels = out_channels
               
@@ -192,5 +192,5 @@ class ReviewCNN_Embed_Classifier(Embedding, nn.Module):
 
 if __name__ == '__main__':
     channel_list = [50, 25]
-    cnnClassifier = ReviewCNN_Embed_Classifier2(200, 1, channel_list, batch_norm=True, dropout=True)
+    cnnClassifier = ReviewCNN_Embed_Classifier(200, 1, channel_list, batch_norm=True, dropout=True)
     print(cnnClassifier)

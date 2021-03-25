@@ -4,7 +4,7 @@
 
 import os
 from argparse import Namespace
-from model import ReviewMLPClassifier, ReviewPerceptronClassifier, ReviewMLP_Embed_Classifier
+from model import ReviewMLPClassifier, ReviewPerceptronClassifier, ReviewMLP_Embed_Classifier, ReviewCNN_Embed_Classifier
 from dataset import ReviewDataset
 from torch.nn.modules.dropout import Dropout
 from utils import handle_dirs
@@ -12,20 +12,21 @@ from utils import handle_dirs
 args = Namespace(
     # Data and Path information
     frequency_cutoff=25,
-    model_state_file='model_embed_mlp_test.pth',
+    model_state_file='model_embed_cnn_len300.pth',
     review_csv='../input/reviews_with_splits_lite.csv',
     # review_csv='data/yelp/reviews_with_splits_full.csv',
-    save_dir='../experiment/embedding/',
+    save_dir='../experiment/embedding_cnn/',
     vectorizer_file='vectorizer.json',
     classifier=None,
     vectorizer = None,
     dataset=None,
+    architecture_type=None,
     # No Model hyper parameters
     # Training hyper parameters
     batch_size=32,
     early_stopping_criteria=5,
     learning_rate=0.001,
-    num_epochs=1,
+    num_epochs=10,
     seed=1337,
     # Runtime options
     catch_keyboard_interrupt=True,
@@ -34,7 +35,7 @@ args = Namespace(
     reload_from_files=False,
     train=True, # Flag to train your network
     # If embedding layer is used
-    max_len = 25,
+    max_len = 300,
     vector_type='embedding',
     embedding_type = 'pre-trained',
     embedding_file_name= '../input/glove.6B.50d.txt'
@@ -61,14 +62,17 @@ vectorizer = dataset.get_vectorizer()
 
 # classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
 # classifier = ReviewMLPClassifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100])
-classifier = ReviewMLP_Embed_Classifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100, 50],
-                embedding_file_name=args.embedding_file_name, embedding_dim=50,  
-                word_to_index=vectorizer.review_vocab._token_to_idx, max_idx=len(vectorizer.review_vocab),
-                freeze=False)
-# classifier = ReviewCNN_Embed_Classifier2(num_features=len(vectorizer.review_vocab), num_classes=1, channel_list=[100, 200],
+# classifier = ReviewMLP_Embed_Classifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100, 50],
 #                 embedding_file_name=args.embedding_file_name, embedding_dim=50,  
 #                 word_to_index=vectorizer.review_vocab._token_to_idx, max_idx=len(vectorizer.review_vocab),
-#                 freeze=False, batch_norm=True, dropout=True, max_pool=True)
+#                 freeze=False)
+# args.architecture_type = 'MLP'
+
+classifier = ReviewCNN_Embed_Classifier(num_features=len(vectorizer.review_vocab), num_classes=1, channel_list=[100, 200, 400],
+                embedding_file_name=args.embedding_file_name, embedding_dim=50,  
+                word_to_index=vectorizer.review_vocab._token_to_idx, max_idx=len(vectorizer.review_vocab),
+                freeze=False, batch_norm=True, dropout=True, max_pool=True)
+args.architecture_type = 'CNN'
 
 
 args.classifier = classifier
