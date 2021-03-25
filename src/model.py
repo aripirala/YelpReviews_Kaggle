@@ -2,11 +2,13 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import sys
 import timeit
 import datetime
 import numpy as np
 import sys
+from utils import column_gather
 
 
 
@@ -190,7 +192,69 @@ class ReviewCNN_Embed_Classifier(Embedding, nn.Module):
         return logits
 
 
+class ReviewRNN_Embed_Classifier(Embedding, nn.Module):
+    def __init__(self, num_features, num_classes, rnn_hidden_size, activation_fn = 'RELU', 
+                    embedding_dim=100, embedding_type=None, embedding_file_name=None, 
+                    word_to_index=None, max_idx=1000, freeze=True, batch_norm=False, batch_first=True, dropout=False, **kwargs):
+
+        super(ReviewRNN_Embed_Classifier, self).__init__(num_features=num_features, embedding_dim=embedding_dim, 
+                    embedding_type=embedding_type, embedding_file_name=embedding_file_name, 
+                    word_to_index=word_to_index, max_idx=max_idx, freeze=freeze, **kwargs)
+        
+        layers = []
+        
+
+        self.rnn = nn.GRU(input_size=embedding_dim,
+                             hidden_size=rnn_hidden_size,
+                             batch_first=batch_first)
+        self.fc1 = nn.Linear(in_features=rnn_hidden_size,
+                         out_features=rnn_hidden_size)
+        self.fc2 = nn.Linear(in_features=rnn_hidden_size,
+                          out_features=num_classes)
+
+    def forward(self, x_in, x_lengths=None, apply_sigmoid=False):
+        """The forward pass of the classifier
+        
+        Args:
+            x_in (torch.Tensor): an input data tensor. 
+                x_in.shape should be (batch, input_dim)
+            x_lengths (torch.Tensor): the lengths of each sequence in the batch.
+                They are used to find the final vector of each sequence
+            apply_softmax (bool): a flag for the softmax activation
+                should be false if used with the Cross Entropy losses
+        Returns:
+            the resulting tensor. tensor.shape should be (batch, output_dim)
+        """
+        # print(f'x_input shape is {x_in.size()}')
+        x_in = x_in.to(torch.long)
+        x_embed = self.embedding(x_in) # => batch_size x seq_len x emb_dim
+        
+        # print(f'embedding shape is {embed_out.size()}')
+        # embed_out,_ = torch.max(embed_out, dim=2)
+        # print(f'embedding shape is {embed_out.size()}')
+        
+        # sys.exit()
+
+        y_out, _ = self.rnn(x_embed.float())
+
+        # print(f'cnn output shape is {cnn_output.size()}')
+        # print(f'x_lengths shape is {x_lengths.size()}')
+        if x_lengths is not None:
+            y_out = column_gather(y_out, x_lengths)
+        else:
+            y_out = y_out[:, -1, :]
+
+        # print(f'After column gather: y_out shape is {y_out.size()}')
+        y_out = F.relu(self.fc1(F.dropout(y_out, 0.5)))
+        logits = self.fc2(F.dropout(y_out, 0.5)).squeeze()
+
+        if apply_sigmoid:
+            logits = torch.sigmoid(logits)
+        return logits
+
+
+
 if __name__ == '__main__':
-    channel_list = [50, 25]
-    cnnClassifier = ReviewCNN_Embed_Classifier(200, 1, channel_list, batch_norm=True, dropout=True)
-    print(cnnClassifier)
+    rnn_hidden_size = 200
+    RnnClassifier = ReviewRNN_Embed_Classifier(200, 1, rnn_hidden_size)
+    print(RnnClassifier)

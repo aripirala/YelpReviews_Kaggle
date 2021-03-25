@@ -9,6 +9,7 @@ import torch
 from torch.utils.data import DataLoader
 import json
 import re
+import sys
 # from configs import args
 
 
@@ -403,3 +404,30 @@ def preprocess_text(text):
     text = re.sub(r"([.,!?])", r" \1 ", text)
     text = re.sub(r"[^a-zA-Z.,!?]+", r" ", text)
     return text
+
+def column_gather(y_out, x_lengths):
+    '''Get a specific vector from each batch datapoint in `y_out`.
+
+    More precisely, iterate over batch row indices, get the vector that's at
+    the position indicated by the corresponding value in `x_lengths` at the row
+    index.
+
+    Args:
+        y_out (torch.FloatTensor, torch.cuda.FloatTensor)
+            shape: (batch, sequence, feature)
+        x_lengths (torch.LongTensor, torch.cuda.LongTensor)
+            shape: (batch,)
+
+    Returns:
+        y_out (torch.FloatTensor, torch.cuda.FloatTensor)
+            shape: (batch, feature)
+    '''
+    x_lengths = x_lengths.long().detach().cpu().numpy() - 1
+
+    # print(f'In Column Gather: y out shape is {y_out.size()}')
+    # sys.exit()
+    out = []
+    for batch_index, column_index in enumerate(x_lengths):
+        out.append(y_out[batch_index, column_index])
+
+    return torch.stack(out)

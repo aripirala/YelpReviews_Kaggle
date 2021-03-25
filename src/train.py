@@ -115,7 +115,7 @@ if __name__ == '__main__':
                     # step 2. compute the output
                     # print(f'Classifier is \n {classifier}')
                     if args.architecture_type == 'RNN':
-                        y_pred = classifier(x_in=batch_dict['x_data'].float(), vector_lengths=batch_dict['vector_len'])
+                        y_pred = classifier(x_in=batch_dict['x_data'].float(), x_lengths=batch_dict['vector_len'])
                     else:
                         y_pred = classifier(x_in=batch_dict['x_data'].float())
                     y_true = batch_dict['y_target']
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                 for batch_index, batch_dict in enumerate(batch_generator):
                     # compute the output
                     if args.architecture_type == 'RNN':
-                        y_pred = classifier(x_in=batch_dict['x_data'].float(), vector_lengths=batch_dict['vector_len'])
+                        y_pred = classifier(x_in=batch_dict['x_data'].float(), x_lengths=batch_dict['vector_len'])
                     else:
                         y_pred = classifier(x_in=batch_dict['x_data'].float())
                     
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     for batch_index, batch_dict in enumerate(batch_generator):
         # compute the output
         if args.architecture_type == 'RNN':
-            y_pred = classifier(x_in=batch_dict['x_data'].float(), vector_lengths=batch_dict['vector_len'])
+            y_pred = classifier(x_in=batch_dict['x_data'].float(), x_lengths=batch_dict['vector_len'])
         else:
             y_pred = classifier(x_in=batch_dict['x_data'].float())
     
