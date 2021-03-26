@@ -4,7 +4,7 @@
 
 import os
 from argparse import Namespace
-from model import ReviewMLPClassifier, ReviewPerceptronClassifier
+from model import ReviewMLPClassifier, ReviewPerceptronClassifier, ReviewMLPEmbClassifier
 from dataset import ReviewDataset
 from utils import handle_dirs
 
@@ -24,14 +24,15 @@ args = Namespace(
     batch_size=32,
     early_stopping_criteria=5,
     learning_rate=0.001,
-    num_epochs=10,
+    num_epochs=2,
     seed=1337,
     # Runtime options
     catch_keyboard_interrupt=True,
-    cuda=True,
+    cuda=False,
     expand_filepaths_to_save_dir=True,
     reload_from_files=False,
-    train=False,
+    train=True,
+    emb=True
 )
 # handle dirs
 handle_dirs(args.save_dir)
@@ -50,7 +51,12 @@ else:
 
 vectorizer = dataset.get_vectorizer()
 
-classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
+if args.emb:
+    embedded_cols = {f'col_{i}': 7497 for i in range(10)}
+    embedding_sizes = [(n_categories, min(500, (n_categories+1)//2)) for _,n_categories in embedded_cols.items()]
+    classifier = ReviewMLPEmbClassifier(embedding_sizes, num_features=10, num_classes=1)
+else:
+    classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
 # classifier = ReviewMLPClassifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100])
 
 

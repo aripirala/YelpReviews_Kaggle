@@ -125,7 +125,7 @@ class ReviewVectorizer(object):
         self.review_vocab = review_vocab
         self.rating_vocab = rating_vocab
     
-    def vectorize(self, review):
+    def vectorize(self, review, emb= True):
         """Create a collapsed one-hot code vector fo the review
 
         Args:
@@ -134,13 +134,26 @@ class ReviewVectorizer(object):
             one_hot (np.ndarray): collapsed one-hot encoding
         """
 
-        one_hot = np.zeros(len(self.review_vocab), dtype=np.float32)
+        if emb:
+            one_hot = []
+            for token in review.split(" ")[:10]:
+                idx = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
+                one_hot.append(idx)
+        else:
+            one_hot = np.zeros(len(self.review_vocab), dtype=np.float32)
 
-        for token in review.split(" "):
-            idx = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
-            one_hot[idx] = 1
+            for token in review.split(" "):
+                idx = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
+                one_hot[idx] = 1
 
         return one_hot
+
+    def vectorize_embeddings(self, review):
+
+        one_hot = [] #np.zeros(len(10), dtype=np.float32)
+        for token in review.split(" ")[:10]:
+            idx = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
+            one_hot.append(idx)
 
     @classmethod
     def from_dataframe(cls, review_df, cutoff=25):

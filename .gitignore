@@ -133,7 +133,7 @@ dmypy.json
 input/
 models/
 experiment/
-
+notes
 .idea/
 
 # data files
