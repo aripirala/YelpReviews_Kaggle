@@ -135,10 +135,12 @@ class ReviewVectorizer(object):
         """
 
         if emb:
-            one_hot = []
+            one_hot = np.zeros(10, dtype=np.long)
+            i = 0
             for token in review.split(" ")[:10]:
                 idx = self.review_vocab.lookup_token(token) # get index for the token from the vocab class
-                one_hot.append(idx)
+                one_hot[i] = idx
+                i +=1
         else:
             one_hot = np.zeros(len(self.review_vocab), dtype=np.float32)
 
@@ -247,6 +249,7 @@ def generate_batches(dataset, batch_size, shuffle=True,
                             shuffle=shuffle, drop_last=drop_last)
 
     for data_dict in dataloader:
+        # print(data_dict)
         out_data_dict = {}
         for name in data_dict.keys():
             out_data_dict[name] = data_dict[name].to(device)

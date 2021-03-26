@@ -12,7 +12,7 @@ args = Namespace(
     # Data and Path information
     frequency_cutoff=25,
     model_state_file='model_2.pth',
-    review_csv='../input/reviews_with_splits_lite.csv',
+    review_csv='/workspaces/YelpReviews_Kaggle/input/reviews_with_splits_lite.csv',
     # review_csv='data/yelp/reviews_with_splits_full.csv',
     save_dir='../experiment/perceptron/',
     vectorizer_file='vectorizer.json',
@@ -32,7 +32,7 @@ args = Namespace(
     expand_filepaths_to_save_dir=True,
     reload_from_files=False,
     train=True,
-    emb=True
+    emb=False
 )
 # handle dirs
 handle_dirs(args.save_dir)
@@ -54,7 +54,7 @@ vectorizer = dataset.get_vectorizer()
 if args.emb:
     embedded_cols = {f'col_{i}': 7497 for i in range(10)}
     embedding_sizes = [(n_categories, min(500, (n_categories+1)//2)) for _,n_categories in embedded_cols.items()]
-    classifier = ReviewMLPEmbClassifier(embedding_sizes, num_features=10, num_classes=1)
+    classifier = ReviewMLPEmbClassifier(embedding_sizes, num_classes=1)
 else:
     classifier = ReviewPerceptronClassifier(num_features=len(vectorizer.review_vocab), num_classes=1)
 # classifier = ReviewMLPClassifier(num_features=len(vectorizer.review_vocab), num_classes=1, hidden_layer_dim=[100])

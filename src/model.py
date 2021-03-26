@@ -35,7 +35,7 @@ class ReviewMLPClassifier(nn.Module):
         return logits
 
 class ReviewMLPEmbClassifier(nn.Module):
-    def __init__(self, embedding_sizes, num_features, num_classes, hidden_layer_dim=None, activation_fn = 'RELU'):
+    def __init__(self, embedding_sizes, num_classes, hidden_layer_dim=None, activation_fn = 'RELU'):
         super(ReviewMLPEmbClassifier, self).__init__()
         self.embeddings = nn.ModuleList([nn.Embedding(categories, size) for categories,size in embedding_sizes])
         self.n_emb = sum(e.embedding_dim for e in self.embeddings)
@@ -53,11 +53,15 @@ class ReviewMLPEmbClassifier(nn.Module):
         self.model = nn.Sequential( *layers)
 
     def forward(self, x_in, apply_sigmoid=False):
-        x_in = [e(x_in[i]) for i,e in enumerate(self.embeddings)]
-        x_in = torch.cat(x_in, 0)
+        x_in = [e(x_in[:, i]) for i,e in enumerate(self.embeddings)]
+        # print(f'y_pred shape is {x_in}')
+        x_in = torch.cat(x_in, 1)
+        # print(f'y_pred shape is {x_in.size()}')
         logits = self.model(x_in).squeeze()
+        # print(f'y_pred shape is {logits.size()}')
         if apply_sigmoid:
             logits = torch.sigmoid(logits)
+        print(logits.size())
         return logits
 
 if __name__ == '__main__':
@@ -67,9 +71,9 @@ if __name__ == '__main__':
     # embedding_sizes
     embedded_col_names = embedded_cols.keys()
     
-    mlpClassifier = ReviewMLPEmbClassifier(embedding_sizes, 200, 1, hidden_layer_dim)
+    mlpClassifier = ReviewMLPEmbClassifier(embedding_sizes, 1, hidden_layer_dim)
     print(mlpClassifier)
-    
+
     one_hot_sample = [6, 356, 0, 6, 222, 9, 357, 49, 44, 6]
     x = torch.tensor(one_hot_sample)
     print(mlpClassifier(x))

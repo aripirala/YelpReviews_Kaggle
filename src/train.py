@@ -113,10 +113,11 @@ if __name__ == '__main__':
                     optimizer.zero_grad()
 
                     # step 2. compute the output
-                    y_pred = classifier(x_in=batch_dict['x_data'].float())
+                    y_pred = classifier(x_in=batch_dict['x_data'])
                     y_true = batch_dict['y_target']
 
                     # step 3. compute the loss
+                    # print(f'x_batch shape is {batch_dict["x_data"].size()}')
                     # print(f'y_pred shape is {y_pred.size()}')
                     # print(f'y_true shape is {y_true.size()}')
 
@@ -156,7 +157,7 @@ if __name__ == '__main__':
 
                 for batch_index, batch_dict in enumerate(batch_generator):
                     # compute the output
-                    y_pred = classifier(x_in=batch_dict['x_data'].float())
+                    y_pred = classifier(x_in=batch_dict['x_data'])
 
                     # step 3. compute the loss
                     loss = loss_func(y_pred, batch_dict['y_target'].float())
@@ -209,7 +210,7 @@ if __name__ == '__main__':
 
     for batch_index, batch_dict in enumerate(batch_generator):
         # compute the output
-        y_pred = classifier(x_in=batch_dict['x_data'].float())
+        y_pred = classifier(x_in=batch_dict['x_data'])
 
         # compute the loss
         loss = loss_func(y_pred, batch_dict['y_target'].float())
