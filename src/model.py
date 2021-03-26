@@ -66,6 +66,10 @@ if __name__ == '__main__':
     embedding_sizes = [(n_categories, min(500, (n_categories+1)//2)) for _,n_categories in embedded_cols.items()]
     # embedding_sizes
     embedded_col_names = embedded_cols.keys()
-
+    
     mlpClassifier = ReviewMLPEmbClassifier(embedding_sizes, 200, 1, hidden_layer_dim)
     print(mlpClassifier)
+    
+    one_hot_sample = [6, 356, 0, 6, 222, 9, 357, 49, 44, 6]
+    x = torch.tensor(one_hot_sample)
+    print(mlpClassifier(x))

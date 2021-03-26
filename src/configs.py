@@ -32,7 +32,7 @@ args = Namespace(
     expand_filepaths_to_save_dir=True,
     reload_from_files=False,
     train=True,
-    emb=False
+    emb=True
 )
 # handle dirs
 handle_dirs(args.save_dir)
