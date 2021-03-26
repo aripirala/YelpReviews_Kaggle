@@ -32,7 +32,7 @@ args = Namespace(
     expand_filepaths_to_save_dir=True,
     reload_from_files=False,
     train=True,
-    emb=True
+    emb=False
 )
 # handle dirs
 handle_dirs(args.save_dir)
@@ -42,11 +42,11 @@ if args.reload_from_files:
         # training from a checkpoint
         print("Loading dataset and vectorizer")        
         dataset = ReviewDataset.load_dataset_and_load_vectorizer(args.review_csv,
-                                                                 vectorizer_pth)
+                                                                 vectorizer_pth, args.emb)
 else:
         print("Loading dataset and creating vectorizer")
         # create dataset and vectorizer
-        dataset = ReviewDataset.load_dataset_and_make_vectorizer(args.review_csv)
+        dataset = ReviewDataset.load_dataset_and_make_vectorizer(args.review_csv, args.emb)
         dataset.save_vectorizer(vectorizer_pth)
 
 vectorizer = dataset.get_vectorizer()

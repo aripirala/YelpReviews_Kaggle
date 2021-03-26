@@ -10,7 +10,7 @@ import json
 
 
 class ReviewDataset:
-    def __init__(self, review_df, vectorizer):
+    def __init__(self, review_df, vectorizer, emb=True):
         """
 
         :param review_df (pandas Dataframe): the dataset containing the reviews and rating
@@ -18,6 +18,7 @@ class ReviewDataset:
         """
         self.review_df = review_df
         self.vectorizer = vectorizer
+        self.emb = emb
 
         self.train_df = self.review_df[self.review_df.split=='train']
         self.train_size = len(self.train_df)
@@ -37,7 +38,7 @@ class ReviewDataset:
         self.set_split('train')
 
     @classmethod
-    def load_dataset_and_make_vectorizer(cls, review_csv):
+    def load_dataset_and_make_vectorizer(cls, review_csv, emb):
         """Load dataset and make a new vectorizer from scratch
 
         :param review_csv (str): location of dataset
@@ -48,10 +49,10 @@ class ReviewDataset:
         train_review_df = review_df[review_df.split=='train']
         vectorizer = ReviewVectorizer.from_dataframe(train_review_df)
         print(f'Vectorizer created')
-        return cls(review_df, vectorizer)
+        return cls(review_df, vectorizer,emb)
 
     @classmethod
-    def load_dataset_and_load_vectorizer(cls, review_csv, vectorizer_pth):
+    def load_dataset_and_load_vectorizer(cls, review_csv, vectorizer_pth, emb):
         """
 
         :param review_csv (str): location of the dataset
@@ -115,7 +116,7 @@ class ReviewDataset:
 
         # print(f'row is {row}')
 
-        review_vector = self.vectorizer.vectorize(row.review)
+        review_vector = self.vectorizer.vectorize(row.review, self.emb)
         rating_index = self.vectorizer.rating_vocab.lookup_token(row.rating)
 
         return {
